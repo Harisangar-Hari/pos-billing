@@ -258,8 +258,12 @@ export default function ReturnPOSPage() {
             setReturnItems([]);
             setReplacementItems([]);
             setSearch("");
-        } catch {
-            showToast("Failed to process exchange", "error");
+        } catch (error: any) {
+            const message =
+                error?.response?.data?.message ||
+                error?.message ||
+                "Something went wrong";
+            showToast(message, "error");
         }
     };
 
