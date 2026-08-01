@@ -6,49 +6,49 @@
 import logoSrc from "../assets/logo.jpeg";
 
 export interface PrintItem {
-    name: string;
-    quantity: number;
-    price: number;
+  name: string;
+  quantity: number;
+  price: number;
 }
 
 export interface ReceiptData {
-    invoiceNumber?: string;
-    items: PrintItem[];
-    customerName?: string;
-    customerPhone?: string;
-    total: number;
-    paid: number;
-    change?: number;
-    balance?: number;
-    paymentMode: "cash" | "credit";
+  invoiceNumber?: string;
+  items: PrintItem[];
+  customerName?: string;
+  customerPhone?: string;
+  total: number;
+  paid: number;
+  change?: number;
+  balance?: number;
+  paymentMode: "cash" | "credit";
 }
 
 // ── Step 1: convert the bundled asset to a base64 data URL ──────────────────
 // We draw it onto a canvas so Chrome gives us a clean data URL
 // regardless of how Vite/CRA hashed the filename.
 function imageToBase64(src: string): Promise<string> {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            canvas.getContext("2d")!.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL("image/jpeg", 0.92));
-        };
-        img.onerror = () => resolve(""); // skip logo if it fails, still print
-        img.src = src;
-    });
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext("2d")!.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL("image/jpeg", 0.92));
+    };
+    img.onerror = () => resolve(""); // skip logo if it fails, still print
+    img.src = src;
+  });
 }
 
 // ── Step 2: build the full HTML string ──────────────────────────────────────
 function buildHTML(data: ReceiptData, logoB64: string): string {
-    const now = new Date().toLocaleString("en-GB", {
-        day: "2-digit", month: "2-digit", year: "numeric",
-        hour: "2-digit", minute: "2-digit", second: "2-digit",
-    });
+  const now = new Date().toLocaleString("en-GB", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+  });
 
-    const rows = data.items.map((i) => `
+  const rows = data.items.map((i) => `
     <tr>
       <td colspan="2" class="item-name">${i.name}</td>
     </tr>
@@ -58,11 +58,11 @@ function buildHTML(data: ReceiptData, logoB64: string): string {
     </tr>
   `).join("");
 
-    const payRow = data.paymentMode === "cash"
-        ? `<tr><td>Change</td><td class="amount">${(data.change ?? 0).toFixed(2)}</td></tr>`
-        : `<tr><td>Balance</td><td class="amount">${(data.balance ?? 0).toFixed(2)}</td></tr>`;
+  const payRow = data.paymentMode === "cash"
+    ? `<tr><td>Change</td><td class="amount">${(data.change ?? 0).toFixed(2)}</td></tr>`
+    : `<tr><td>Balance</td><td class="amount">${(data.balance ?? 0).toFixed(2)}</td></tr>`;
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -163,6 +163,8 @@ function buildHTML(data: ReceiptData, logoB64: string): string {
   ${data.invoiceNumber ? `<p class="meta">Invoice: ${data.invoiceNumber}</p>` : ""}
   <p class="meta">${now}</p>
   <p class="meta">Cashier: M. Thivaharan</p>
+  ${data.customerName ? `<p class="meta">Customer: ${data.customerName}</p>` : ""}
+  ${data.customerPhone ? `<p class="meta">Phone: ${data.customerPhone}</p>` : ""}
 
   <hr class="div">
 
@@ -209,18 +211,18 @@ function buildHTML(data: ReceiptData, logoB64: string): string {
 // ── Step 3: turn the HTML into a Blob URL and open it ───────────────────────
 // Chrome treats blob: URLs as real pages — full CSS, no sandbox restrictions.
 export async function printReceipt(data: ReceiptData): Promise<void> {
-    const logoB64 = await imageToBase64(logoSrc);
-    const html = buildHTML(data, logoB64);
+  const logoB64 = await imageToBase64(logoSrc);
+  const html = buildHTML(data, logoB64);
 
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
 
-    const win = window.open(url, "_blank");
+  const win = window.open(url, "_blank");
 
-    // Release the blob URL after the window has loaded it
-    if (win) {
-        win.addEventListener("load", () => {
-            URL.revokeObjectURL(url);
-        });
-    }
+  // Release the blob URL after the window has loaded it
+  if (win) {
+    win.addEventListener("load", () => {
+      URL.revokeObjectURL(url);
+    });
+  }
 }
